@@ -1,0 +1,1 @@
+Put your stuff in AssetBundles/source/ so the sdk can package them correctly
