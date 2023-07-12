@@ -44,10 +44,10 @@ public class CreateAssetBundles
         {
             bundleVersions = new Dictionary<string, int>();
         }
-		else
-		{
-			bundleVersions.Clear();	
-		}
+        else
+        {
+            bundleVersions.Clear();
+        }
 
         if (File.Exists(path))
         {
@@ -85,10 +85,10 @@ public class CreateAssetBundles
         {
             bundleContents = new Dictionary<string, List<string>>();
         }
-		else
-		{
-			bundleContents.Clear();	
-		}
+        else
+        {
+            bundleContents.Clear();
+        }
         if (File.Exists(path))
         {
             StreamReader streamReader = new StreamReader(path);
@@ -144,7 +144,7 @@ public class CreateAssetBundles
         StreamWriter streamWriter = new StreamWriter(path);
         foreach (KeyValuePair<string, List<string>> asset in bundleContents)
         {
-            if(File.Exists(exportPath + asset.Key))
+            if (File.Exists(exportPath + asset.Key))
             {
                 //For readability in the txt file
                 streamWriter.WriteLine("BundleName:" + asset.Key);
@@ -183,7 +183,7 @@ public class CreateAssetBundles
         //Read and parse the contents file
         ReadBundleContentsFile(path + bundleContentsFileName, bundleContents);
 
-		//Check if the directory exist
+        //Check if the directory exist
         if (!Directory.Exists(Application.dataPath + assetBundleFolderLocation))
         {
             Debug.LogError("Specified 'AssetBundles folder' does not exist! Open Assets->Bundle Creator->Asset Bundle Creator to correct it");
@@ -199,12 +199,12 @@ public class CreateAssetBundles
 
             //if the user has specified a build target, add a prefix to the bundle name
             string bundleName = "";
-			string directoryName = dirInfo.Name;
-			if(thisWindow.setLowerCaseName)
-			{
-				directoryName = directoryName.ToLower();
-			}
-			
+            string directoryName = dirInfo.Name;
+            if (thisWindow.setLowerCaseName)
+            {
+                directoryName = directoryName.ToLower();
+            }
+
             if (!thisWindow.optionalSettings)
             {
                 bundleName = directoryName + thisWindow.bundleFileExtension;
@@ -234,7 +234,7 @@ public class CreateAssetBundles
                 else if (!asset.EndsWith(".meta"))
                 {
                     //toInclude.AddRange(AssetDatabase.LoadAllAssetsAtPath(assetBundleFolderLocation + dirInfo.Name + "/" + thisFileName));
-					string internalFilePath = "Assets" + assetBundleFolderLocation + dirInfo.Name + "/" + thisFileName;
+                    string internalFilePath = "Assets" + assetBundleFolderLocation + dirInfo.Name + "/" + thisFileName;
                     toInclude.Add((Object)AssetDatabase.LoadAssetAtPath(internalFilePath, typeof(Object)));
                     assetListInFolder.Add(thisFileName);
                 }
@@ -299,11 +299,11 @@ public class CreateAssetBundles
     public static bool BuildAssetBundle(AssetBundleWindow thisWindow, List<Object> toInclude, string bundlePath)
     {
         BuildAssetBundleOptions buildAssetOptions = 0;
-        if(thisWindow.buildAssetBundleOptions)
+        if (thisWindow.buildAssetBundleOptions)
         {
-            if(thisWindow.collectDependencies)
+            if (thisWindow.collectDependencies)
             {
-                if(buildAssetOptions == 0)
+                if (buildAssetOptions == 0)
                 {
                     buildAssetOptions = BuildAssetBundleOptions.CollectDependencies;
                 }
@@ -312,9 +312,9 @@ public class CreateAssetBundles
                     buildAssetOptions |= BuildAssetBundleOptions.CollectDependencies;
                 }
             }
-            if(thisWindow.completeAssets)
+            if (thisWindow.completeAssets)
             {
-                if(buildAssetOptions == 0)
+                if (buildAssetOptions == 0)
                 {
                     buildAssetOptions = BuildAssetBundleOptions.CompleteAssets;
                 }
@@ -323,9 +323,9 @@ public class CreateAssetBundles
                     buildAssetOptions |= BuildAssetBundleOptions.CompleteAssets;
                 }
             }
-            if(thisWindow.disableWriteTypeTree)
+            if (thisWindow.disableWriteTypeTree)
             {
-                if(buildAssetOptions == 0)
+                if (buildAssetOptions == 0)
                 {
                     buildAssetOptions = BuildAssetBundleOptions.DisableWriteTypeTree;
                 }
@@ -334,9 +334,9 @@ public class CreateAssetBundles
                     buildAssetOptions |= BuildAssetBundleOptions.DisableWriteTypeTree;
                 }
             }
-            if(thisWindow.deterministicAssetBundle)
+            if (thisWindow.deterministicAssetBundle)
             {
-                if(buildAssetOptions == 0)
+                if (buildAssetOptions == 0)
                 {
                     buildAssetOptions = BuildAssetBundleOptions.DeterministicAssetBundle;
                 }
@@ -345,9 +345,9 @@ public class CreateAssetBundles
                     buildAssetOptions |= BuildAssetBundleOptions.DeterministicAssetBundle;
                 }
             }
-            if(thisWindow.uncompressedAssetBundle)
+            if (thisWindow.uncompressedAssetBundle)
             {
-                if(buildAssetOptions == 0)
+                if (buildAssetOptions == 0)
                 {
                     buildAssetOptions = BuildAssetBundleOptions.UncompressedAssetBundle;
                 }
@@ -368,28 +368,28 @@ public class CreateAssetBundles
         }
         else
         {
-              if (buildAssetOptions == 0) //If it's still zero, set default values
-              {
-                  Debug.LogWarning("No BuildAssetBundleOptions are set, reverting back to dependency tracking. If you want no dependency tracking uncheck the 'BuildAssetBundleOptions' && 'Optional Settings' toggles all together");
-                  buildAssetOptions = BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets;
-				  thisWindow.buildAssetBundleOptions = true;
-                  thisWindow.collectDependencies = true;
-                  thisWindow.completeAssets = true;
-              }
-              if (thisWindow.optionalSettings) //Support for different build targets
-              {
-                  if (!BuildPipeline.BuildAssetBundle(null, toInclude.ToArray(), bundlePath, buildAssetOptions, thisWindow.buildTarget))
-                  {
-                      return false;
-                  }
-              }
-              else
-              {
-                  if (!BuildPipeline.BuildAssetBundle(null, toInclude.ToArray(), bundlePath, buildAssetOptions, BuildTarget.StandaloneWindows64))
-                  {
-                      return false;
-                  }
-              }
+            if (buildAssetOptions == 0) //If it's still zero, set default values
+            {
+                Debug.LogWarning("No BuildAssetBundleOptions are set, reverting back to dependency tracking. If you want no dependency tracking uncheck the 'BuildAssetBundleOptions' && 'Optional Settings' toggles all together");
+                buildAssetOptions = BuildAssetBundleOptions.CollectDependencies | BuildAssetBundleOptions.CompleteAssets;
+                thisWindow.buildAssetBundleOptions = true;
+                thisWindow.collectDependencies = true;
+                thisWindow.completeAssets = true;
+            }
+            if (thisWindow.optionalSettings) //Support for different build targets
+            {
+                if (!BuildPipeline.BuildAssetBundle(null, toInclude.ToArray(), bundlePath, buildAssetOptions, thisWindow.buildTarget))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!BuildPipeline.BuildAssetBundle(null, toInclude.ToArray(), bundlePath, buildAssetOptions, BuildTarget.StandaloneWindows64))
+                {
+                    return false;
+                }
+            }
         }
         return true;
     }
