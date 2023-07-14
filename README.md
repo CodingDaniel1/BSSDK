@@ -24,9 +24,6 @@ To crate the preview images I used the unity Asset Preview. There is a lot of fu
 
 
 # Know Issues
-## AssetBundle Build Failed!
-1. Press the build button again,
-2. If that doesn't work, check your prefabs, delete everything in the output folder and delete everything in the AssetBundle folder other than source and source.meta (you need to delete them in unity so that the folders aren't reconstructed in unity from the meta data files), if error persists, well darn idk man, try step 1 or 2 again
 ## Created models are locked to the origin X,Y position
 Remove these functions in this order
 1. Animations
@@ -35,6 +32,13 @@ Remove these functions in this order
 ## Scripts Do nothing
 I haven't figured out how to fix this yet
 
+
+
+# ChangeLog
+- July 12th: init
+- July 12th: Readme Headers Fixed
+- July 13th: fixed Need to run twice Error
+- July 13th: fixed /source directory from being created
 
 
 

@@ -27,10 +27,12 @@
 // THE SOFTWARE.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using UnityEditor;
 using UnityEngine;
 
@@ -71,8 +73,8 @@ namespace Editor
 	    {
 		    // Instantiate undoManager
 		    undoManager = new HOEditorUndoManager( this, "AssetBundleCreator" );
-	    }
-     
+        }
+
 
         void OnGUI()
         {
@@ -195,6 +197,7 @@ namespace Editor
                         if (!Directory.GetDirectories(Application.dataPath + assetBundleFolderLocation).Contains(nameWOext))
                         {
                             Directory.CreateDirectory(Application.dataPath + assetBundleFolderLocation + "/" + nameWOext);
+                            //File.Create(Application.dataPath + assetBundleFolderLocation + "/" + nameWOext + ".meta");
                         }
                         // move file
                         File.Copy(asset, Application.dataPath + assetBundleFolderLocation + "/" + nameWOext + "/" + "model" + ".prefab", true);
@@ -214,7 +217,8 @@ namespace Editor
                     }*/
                 }
 
-
+                //reload asset directory
+                AssetDatabase.Refresh();
 
                 if (!CreateAssetBundles.ExportAssetBundleFolders(this))
                 {
@@ -252,7 +256,9 @@ namespace Editor
                             //Create images
                             try
                             {
-                                File.WriteAllBytes(Application.dataPath + exportLocation + name + "/preview.png", imgPreviews[name]);
+                                if (!name.Equals("source")) { 
+                                    File.WriteAllBytes(Application.dataPath + exportLocation + name + "/preview.png", imgPreviews[name]);
+                                }
                             }
                             catch(Exception e)
                             {
@@ -263,6 +269,22 @@ namespace Editor
                     
                     //create config.json files in all directories containing {"name":"directoryName"}
                 }
+
+
+                //Delete temporary folders
+                string[] needToDeleteDirs = Directory.GetDirectories(Application.dataPath + assetBundleFolderLocation);
+                foreach(string dir in needToDeleteDirs)
+                {
+                    if (!dir.EndsWith("/source"))
+                    {
+                        AssetDatabase.DeleteAsset("Assets" + dir.Replace(Application.dataPath,""));
+                        //Directory.Delete(dir);
+                        //File.Delete(dir + ".meta");
+                    }
+                }
+                File.Delete(Application.dataPath + exportLocation + "source/config.json");
+                File.Delete(Application.dataPath + exportLocation + "source/source.unity3d");
+                Directory.Delete(Application.dataPath + exportLocation + "source");
             }
 
             GUILayout.Label("Bundle Versions", EditorStyles.boldLabel);
