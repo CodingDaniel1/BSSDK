@@ -9,4 +9,5 @@ To make sure your custom models will be loaded correctly you will have to make s
 }
 ```
 
-Tutorials will be added later
+# Installation Proccess
+To install the BSSDK and use it, please refer to the [Banana Shooter Modding Docs](https://bs-docs.readthedocs.io/en/latest/index.html)
