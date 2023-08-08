@@ -40,6 +40,5 @@ I haven't figured out how to fix this yet
 - July 13th: fixed Need to run twice Error
 - July 13th: fixed /source directory from being created
 
-
-
-
+# Installation Proccess
+To install the BSSDK and use it, please refer to the [Banana Shooter Modding Docs](https://bs-docs.readthedocs.io/en/latest/index.html)
