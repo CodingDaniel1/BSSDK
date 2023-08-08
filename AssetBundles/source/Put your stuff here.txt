@@ -1,1 +1,5 @@
 Put your stuff in AssetBundles/source/ so the sdk can package them correctly
+
+Any prefab named source.prefab will be ignored
+
+put as many prefabs as you want in this folder

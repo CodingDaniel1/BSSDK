@@ -26,8 +26,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
 using UnityEditor;
 using UnityEngine;
 
@@ -51,6 +56,7 @@ namespace Editor
         public bool disableWriteTypeTree = false;
         public bool deterministicAssetBundle = false;
         public bool uncompressedAssetBundle = false;
+        public bool removeVariantText = false;
 	    public bool setLowerCaseName = true;
 	    
         public Dictionary<string, int> bundleVersions = new Dictionary<string, int>();
@@ -67,8 +73,8 @@ namespace Editor
 	    {
 		    // Instantiate undoManager
 		    undoManager = new HOEditorUndoManager( this, "AssetBundleCreator" );
-	    }
-     
+        }
+
 
         void OnGUI()
         {
@@ -85,6 +91,7 @@ namespace Editor
             collectDependencies = EditorGUILayout.Toggle("CollectDependencies", collectDependencies);
             completeAssets = EditorGUILayout.Toggle("CompleteAssets", completeAssets);
             disableWriteTypeTree = EditorGUILayout.Toggle("DisableWriteTypeTree", disableWriteTypeTree);
+            removeVariantText = EditorGUILayout.Toggle("Remove Variant Text", removeVariantText);
             deterministicAssetBundle = EditorGUILayout.Toggle("DeterministicAssetBundle", deterministicAssetBundle);
             uncompressedAssetBundle = EditorGUILayout.Toggle("UncompressedAssetBundle", uncompressedAssetBundle);
             EditorGUILayout.EndToggleGroup();
@@ -112,6 +119,107 @@ namespace Editor
                 {
                     Directory.CreateDirectory(Application.dataPath + exportLocation);
                 }
+
+                //clear output folder
+                System.IO.DirectoryInfo di = new DirectoryInfo(Application.dataPath + exportLocation);
+
+                foreach (FileInfo file in di.GetFiles())
+                {
+                    file.Delete();
+                }
+                foreach (DirectoryInfo dir in di.GetDirectories())
+                {
+                    dir.Delete(true);
+                }
+
+                // create directories for each prefab in the /Assets/AssetBundles Folder
+                string[] assetsInFolder = Directory.GetFiles(Application.dataPath + assetBundleFolderLocation + "/source");
+
+                Dictionary<string, byte[]> imgPreviews = new Dictionary<string, byte[]>();
+
+
+                foreach (string asset in assetsInFolder)
+                {
+                    if (asset.EndsWith(".prefab"))
+                    {
+
+                        // move prefabs and metadata files to their respective folders
+                        // rename all prefabs and metadata files to model (with respective file extension)
+
+
+                        //get new directory name
+                        Regex r = new Regex(@".+[/\\]+");
+                        string nameWOext = r.Replace(asset.Replace(".prefab", ""),""); //remove extension and all previous directories
+                        if (removeVariantText)
+                        {
+                            nameWOext = nameWOext.Replace(" variant", "");
+                        }
+
+                        //Get images 
+                        DirectoryInfo dirInfo = new DirectoryInfo(Application.dataPath + assetBundleFolderLocation + "source");
+                        string thisFileName = Path.GetFileName(asset);
+                        string internalFilePath = "Assets" + assetBundleFolderLocation + dirInfo.Name + "/" + thisFileName;
+                        GameObject prefab = ((GameObject) AssetDatabase.LoadAssetAtPath(internalFilePath, typeof(GameObject)));
+                        //Debug.LogWarning(prefab == null);
+                        //AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(prefab), ImportAssetOptions.ForceUpdate);
+                        EditorUtility.SetDirty(prefab);
+                        Texture2D prefabPreview = AssetPreview.GetAssetPreview(prefab);
+                        //Debug.LogWarning(prefabPreview == null);
+
+                        // Create a temporary RenderTexture of the same size as the texture
+                        RenderTexture tmp = RenderTexture.GetTemporary(
+                                            prefabPreview.width,
+                                            prefabPreview.height,
+                                            0,
+                                            RenderTextureFormat.Default,
+                                            RenderTextureReadWrite.Default);
+                        // Blit the pixels on texture to the RenderTexture
+                        Graphics.Blit(prefabPreview, tmp);
+                        // Backup the currently set RenderTexture
+                        RenderTexture previous = RenderTexture.active;
+                        // Set the current RenderTexture to the temporary one we created
+                        RenderTexture.active = tmp;
+                        // Create a new readable Texture2D to copy the pixels to it
+                        Texture2D myTexture2D = new Texture2D(prefabPreview.width, prefabPreview.height);
+                        // Copy the pixels from the RenderTexture to the new Texture
+                        myTexture2D.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
+                        myTexture2D.Apply();
+                        // Reset the active RenderTexture
+                        RenderTexture.active = previous;
+                        // Release the temporary RenderTexture
+                        RenderTexture.ReleaseTemporary(tmp);
+                        byte[] bytes = myTexture2D.EncodeToPNG();
+                        imgPreviews[nameWOext] = bytes;
+                        imgPreviews[nameWOext.ToLower()] = bytes;
+
+
+
+                        if (!Directory.GetDirectories(Application.dataPath + assetBundleFolderLocation).Contains(nameWOext))
+                        {
+                            Directory.CreateDirectory(Application.dataPath + assetBundleFolderLocation + "/" + nameWOext);
+                            //File.Create(Application.dataPath + assetBundleFolderLocation + "/" + nameWOext + ".meta");
+                        }
+                        // move file
+                        File.Copy(asset, Application.dataPath + assetBundleFolderLocation + "/" + nameWOext + "/" + "model" + ".prefab", true);
+
+                    }
+                    /*else if (asset.EndsWith(".prefab.meta"))
+                    {
+                        Regex r = new Regex(@".+[/\\]+");
+                        string nameWOext = r.Replace(asset.Replace(".prefab.meta", ""), ""); //remove extension and all previous directories
+                        if (!Directory.GetDirectories(Application.dataPath + assetBundleFolderLocation).Contains(nameWOext))
+                        {
+                            Directory.CreateDirectory(Application.dataPath + assetBundleFolderLocation + "/" + nameWOext);
+                        }
+                        // move file
+                        File.Copy(asset, Application.dataPath + assetBundleFolderLocation + "/" + nameWOext + "/" + "model" + ".prefab.meta", true);
+
+                    }*/
+                }
+
+                //reload asset directory
+                AssetDatabase.Refresh();
+
                 if (!CreateAssetBundles.ExportAssetBundleFolders(this))
                 {
                     Debug.LogError("AssetBundle Build Failed! - Please check your settings in the Bundle Creator at Assets->Bundle Creator-> Asset Bundle Creator.");
@@ -126,7 +234,57 @@ namespace Editor
                     CreateAssetBundles.ReadBundleControlFile(Application.dataPath + exportLocation + CreateAssetBundles.bundleControlFileName, bundleVersions);
                     CreateAssetBundles.ReadBundleContentsFile(Application.dataPath + exportLocation + CreateAssetBundles.bundleContentsFileName, bundleContents);
                     ReadBundleFileSizes();
+
+                    //move all .unity3d files into directories named after the title before the .unity3d extension
+                    string[] packsInFolder = Directory.GetFiles(Application.dataPath + exportLocation);
+                    foreach(string file in packsInFolder)
+                    {
+                        if (file.EndsWith(".unity3d"))
+                        {
+                            Regex r = new Regex(@".+[/\\]+");
+                            string name = r.Replace(file.Replace(".unity3d", ""), "");
+
+                            //Create Directory
+                            Directory.CreateDirectory(Application.dataPath + exportLocation + name);
+
+                            //Move unity3d file and rename it to source.unity3d
+                            File.Move(file, Application.dataPath + exportLocation + name + "/source.unity3d");
+
+                            string json = "{\"name\":\"" + name + "\"}";
+                            File.WriteAllText(Application.dataPath + exportLocation + name + "/config.json", json);
+
+                            //Create images
+                            try
+                            {
+                                if (!name.Equals("source")) { 
+                                    File.WriteAllBytes(Application.dataPath + exportLocation + name + "/preview.png", imgPreviews[name]);
+                                }
+                            }
+                            catch(Exception e)
+                            {
+                                Debug.LogWarning(e);
+                            }
+                        }
+                    }
+                    
+                    //create config.json files in all directories containing {"name":"directoryName"}
                 }
+
+
+                //Delete temporary folders
+                string[] needToDeleteDirs = Directory.GetDirectories(Application.dataPath + assetBundleFolderLocation);
+                foreach(string dir in needToDeleteDirs)
+                {
+                    if (!dir.EndsWith("/source"))
+                    {
+                        AssetDatabase.DeleteAsset("Assets" + dir.Replace(Application.dataPath,""));
+                        //Directory.Delete(dir);
+                        //File.Delete(dir + ".meta");
+                    }
+                }
+                File.Delete(Application.dataPath + exportLocation + "source/config.json");
+                File.Delete(Application.dataPath + exportLocation + "source/source.unity3d");
+                Directory.Delete(Application.dataPath + exportLocation + "source");
             }
 
             GUILayout.Label("Bundle Versions", EditorStyles.boldLabel);
