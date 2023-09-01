@@ -42,7 +42,7 @@ namespace Editor
     {
         private AssetBundleContent contentWindow;
 
-        public string assetBundleFolderLocation = "AssetBundles/";
+        public string assetBundleFolderLocation = "/AssetBundles/";
         public string exportLocation = "/../AssetBundles/";
         public string bundleFileExtension = ".unity3d";
 
